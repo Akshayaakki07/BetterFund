@@ -23,7 +23,7 @@ import { switchToSepolia } from "../lib/network";
 
 import NextLink from "next/link";
 import DarkModeSwitch from "./DarkModeSwitch";
-import { ChevronDownIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, BellIcon } from "@chakra-ui/icons";
 
 export default function NavBar() {
   const [account, setAccount] = useState("");
@@ -157,6 +157,14 @@ export default function NavBar() {
               variant={"link"}
               display={{ base: "none", md: "inline-flex" }}
             >
+              <NextLink href="/dashboard">Dashboard</NextLink>
+            </Button>
+            <Button
+              fontSize={"md"}
+              fontWeight={600}
+              variant={"link"}
+              display={{ base: "none", md: "inline-flex" }}
+            >
               <NextLink href="/campaign/new">Create Campaign</NextLink>
             </Button>
             <Button
@@ -167,6 +175,17 @@ export default function NavBar() {
             >
               <NextLink href="/#howitworks"> How it Works</NextLink>
             </Button>
+
+            {account && (
+              <Menu>
+                <MenuButton as={Button} variant="ghost" colorScheme="teal" mr={4}>
+                  <BellIcon w={5} h={5} />
+                </MenuButton>
+                <MenuList>
+                  <MenuItem>Welcome to BetterFund!</MenuItem>
+                </MenuList>
+              </Menu>
+            )}
 
             {account ? (
               <Menu>

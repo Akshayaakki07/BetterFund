@@ -34,6 +34,7 @@ import {
   CloseButton,
   FormHelperText,
   Link,
+  useToast,
 } from "@chakra-ui/react";
 
 import { InfoIcon, ExternalLinkIcon } from "@chakra-ui/icons";
@@ -128,6 +129,7 @@ export default function CampaignSingle({
   target,
   ETHPrice,
 }) {
+  const toast = useToast();
   const { handleSubmit, register, formState, reset, getValues } = useForm({
     mode: "onChange",
   });
@@ -170,6 +172,15 @@ export default function CampaignSingle({
         from: accounts[0],
         value: contributionInWei,
       });
+
+      toast({
+        title: "Contribution Successful.",
+        description: "Thank you for your contribution to this campaign.",
+        status: "success",
+        duration: 9000,
+        isClosable: true,
+      });
+
       router.replace(router.asPath);
       setAmountInUSD(null);
       reset("", {
@@ -178,6 +189,13 @@ export default function CampaignSingle({
       setIsSubmitted(true);
       setError(false);
     } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message,
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
       setError(err.message);
       console.log(err);
     }

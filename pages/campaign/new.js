@@ -21,6 +21,7 @@ import {
   AlertDescription,
   FormHelperText,
   Textarea,
+  useToast,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { ArrowBackIcon } from "@chakra-ui/icons";
@@ -31,6 +32,7 @@ import factory from "../../smart-contract/factory";
 import web3 from "../../smart-contract/web3";
 
 export default function NewCampaign() {
+  const toast = useToast();
   const {
     handleSubmit,
     register,
@@ -81,8 +83,23 @@ export default function NewCampaign() {
           from: accounts[0],
         });
 
+      toast({
+        title: "Campaign created.",
+        description: "Your campaign has been successfully created.",
+        status: "success",
+        duration: 9000,
+        isClosable: true,
+      });
+
       router.push("/");
     } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message,
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
       setError(err.message);
       console.log(err);
     }

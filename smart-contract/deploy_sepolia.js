@@ -1,45 +1,51 @@
-const HDWalletProvider = require('truffle-hdwallet-provider');
-const { Web3 } = require('web3'); // Using v4 syntax
-const compiledFactory = require('./build/CampaignFactory.json');
-const path = require('path');
-const fs = require('fs-extra');
+const { ethers } = require("ethers");
+const fs = require("fs-extra");
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
-require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+const compiledFactory = require("./build/CampaignFactory.json");
 
-const mnemonic = process.env.MNEMONIC;
-const rpcUrl = process.env.SEPOLIA_RPC_URL;
+async function main() {
+    const mnemonic = process.env.MNEMONIC;
+    const rpcUrl = process.env.SEPOLIA_RPC_URL;
 
-if (!mnemonic || !rpcUrl) {
-    console.error("Please set MNEMONIC and SEPOLIA_RPC_URL in .env file");
-    process.exit(1);
-}
-
-const provider = new HDWalletProvider(
-    mnemonic,
-    rpcUrl
-);
-
-const web3 = new Web3(provider);
-
-const deploy = async () => {
-    try {
-        const accounts = await web3.eth.getAccounts();
-        console.log('Attempting to deploy from account', accounts[0]);
-
-        const result = await new web3.eth.Contract(JSON.parse(compiledFactory.interface))
-            .deploy({ data: '0x' + compiledFactory.bytecode })
-            .send({ from: accounts[0], gas: '3000000' }); // Sepolia supports EIP-1559, usually auto-detected, or add gasPrice if needed
-
-        console.log('Contract deployed to', result.options.address);
-
-        // Save address
-        fs.writeFileSync(path.resolve(__dirname, 'address_sepolia.txt'), result.options.address);
-
-        process.exit(0);
-    } catch (error) {
-        console.error('Deployment failed:', error);
+    if (!mnemonic || !rpcUrl) {
+        console.error("Please set MNEMONIC and SEPOLIA_RPC_URL in .env file");
         process.exit(1);
     }
-};
 
-deploy();
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const wallet = ethers.Wallet.fromPhrase(mnemonic).connect(provider);
+
+    console.log("Attempting to deploy from account", wallet.address);
+
+    const factory = new ethers.ContractFactory(
+        compiledFactory.interface,
+        compiledFactory.bytecode,
+        wallet
+    );
+
+    const contract = await factory.deploy({
+        maxFeePerGas: ethers.parseUnits("30", "gwei"),
+        maxPriorityFeePerGas: ethers.parseUnits("30", "gwei"),
+        gasLimit: 1200000
+    });
+    console.log("Deployment started, waiting for confirmation...");
+
+    await contract.waitForDeployment();
+    const address = await contract.getAddress();
+
+    console.log("Contract deployed to", address);
+
+    // Save address
+    const addressPath = path.resolve(__dirname, "address_sepolia.txt");
+    fs.writeFileSync(addressPath, address);
+    console.log("Address saved to", addressPath);
+}
+
+main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
